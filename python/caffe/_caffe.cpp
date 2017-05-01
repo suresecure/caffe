@@ -116,6 +116,67 @@ shared_ptr<Net<Dtype> > Net_Init(string network_file, int phase,
   return net;
 }
 
+#include <stdio.h>
+#include <openssl/evp.h>
+#include <unistd.h>
+// 1 for encryption, 0 for decryption
+int do_crypt(const char *in_file, const char *out_file, int do_encrypt) {
+  FILE *fin = fopen(in_file, "rb");
+  FILE *fout = fopen(out_file, "wb");
+  /* Allow enough space in output buffer for additional block */
+  unsigned char inbuf[1024], outbuf[1024 + EVP_MAX_BLOCK_LENGTH];
+  int inlen, outlen;
+  EVP_CIPHER_CTX ctx;
+  /* Bogus key and IV: we'd normally set these from
+   * another source.
+   */
+  const char key_hex_string[] = "1516c47a3af54ee30590989e9400a425", *pos = key_hex_string;
+  unsigned char key[16];
+  size_t count = 0;
+
+  /* WARNING: no sanitization or error-checking whatsoever */
+  for(count = 0; count < sizeof(key)/sizeof(key[0]); count++) {
+    sscanf(pos, "%2hhx", &key[count]);
+    pos += 2;
+  }
+  //unsigned char key[] = "1234567890123456";
+  //1516c47a3af54ee30590989e9400a425
+  unsigned char iv[16] = {0};
+
+  /* Don't set key or IV right away; we want to check lengths */
+  EVP_CIPHER_CTX_init(&ctx);
+  EVP_CipherInit_ex(&ctx, EVP_aes_128_cbc(), NULL, NULL, NULL, do_encrypt);
+  OPENSSL_assert(EVP_CIPHER_CTX_key_length(&ctx) == 16);
+  OPENSSL_assert(EVP_CIPHER_CTX_iv_length(&ctx) == 16);
+
+  /* Now we can set key and IV */
+  EVP_CipherInit_ex(&ctx, NULL, NULL, key, iv, do_encrypt);
+
+  for (;;) {
+    inlen = fread(inbuf, 1, 1024, fin);
+    if (inlen <= 0)
+      break;
+    if (!EVP_CipherUpdate(&ctx, outbuf, &outlen, inbuf, inlen)) {
+      /* Error */
+      EVP_CIPHER_CTX_cleanup(&ctx);
+      return 0;
+    }
+    fwrite(outbuf, 1, outlen, fout);
+  }
+  if (!EVP_CipherFinal_ex(&ctx, outbuf, &outlen)) {
+    /* Error */
+    printf("Error\n");
+    EVP_CIPHER_CTX_cleanup(&ctx);
+    return 0;
+  }
+  fwrite(outbuf, 1, outlen, fout);
+
+  EVP_CIPHER_CTX_cleanup(&ctx);
+  fclose(fin);
+  fclose(fout);
+  return 1;
+}
+
 // Legacy Net construct-and-load convenience constructor
 shared_ptr<Net<Dtype> > Net_Init_Load(
     string param_file, string pretrained_param_file, int phase) {
@@ -129,7 +190,16 @@ shared_ptr<Net<Dtype> > Net_Init_Load(
 
   shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
       static_cast<Phase>(phase)));
-  net->CopyTrainedLayersFrom(pretrained_param_file);
+
+  //decrypt the param file
+  char tmpname[] = "/tmp/happyXXXXXX";
+  int tmpfd = mkstemp(tmpname);
+  close(tmpfd);
+  //printf("tmp file name: %s\n", name);
+  do_crypt(pretrained_param_file.c_str(), tmpname, 0);
+  net->CopyTrainedLayersFrom(tmpname);
+
+  //net->CopyTrainedLayersFrom(pretrained_param_file);
   return net;
 }
 
