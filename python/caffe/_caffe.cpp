@@ -120,7 +120,7 @@ shared_ptr<Net<Dtype> > Net_Init(string network_file, int phase,
 #include <stdio.h>
 #include <openssl/evp.h>
 #include <unistd.h>
-//#include "dog_api.h"
+#include "dog_api.h"
 //戍融厂商代码
 unsigned char SRVendorCode[] = "eFET6mIDZ0VY7HriKt9mA9Vy87rxJtUjn9Ef49u2hT+uaYxmSSO3HAlp27mIT3roXFNHwerTzFF2SnlgdcXTw3hqx4aJ+SfMyZvGb13lksjf2eiRZ/emeiK9aBz9z8o633ZFXiySCoHjbs1rkbbYqGN/WdFYTwh6YwdLs8CgKNV0FN6YTrhWbaivbWPMKsWdM7wU/qhe3wdh/EF1wdfjyuNoXj2GuVanO129ooviJX/r44/VxL09jyvn+7nsQeXlUjaqyIMTD8uWN6bLo5rCeDkZa41WVwdVoiU5cQsJ9YT8sboVzoPbVhJzfr9d5JB7II+2yiGJrvpVptTzjCGjG17mOxxpWwT8ONz7P702ypR/fAmXNdbxQNGtVoF4s+YbycaI6nUktrTKbI1l0dDJO2BRoRzGnK8kcX5FP2NfBIZbr134CMiblV04V5IrsM/lLE3YTW7NdF64wuSPGB5Tdp8TOdXcuig+p3nL0V1Ut/x/+Z5t7+XegrDi8hbApm5TAHBd72FnxrKBYngZiG4/O/t+FvWETP9UT4+NyUJPXLHEl6aXj5zC7tgIVgPkeI9svpZGcuaJndHIA/XlCOewo1A0PeK3dHvxy4RwLv/CumU6/iHYHHsHVzifSi4lZkdxqXoEbJgfo7h7SA4PFf1cC3gWfXiEpkc4WBA+v0f74lw5OAAt4HA00v6HT3m3UvGVlGi7/RoocIZjDlhTlhb0GndhvretD0F9KxweS6nQ1r39XpEC28USvsERp7zoi+Nzf7iOnSXbYbHxhdJlbTabjYE0FHTaB9RxR/XsqchJHWxyaipOLBFqVgb/TPgV9n0HikRn5lg72BqscZEwP+7+VasoC69OcjKX9IN531e7ZTa6h1PHcRmud2jAXeWi+3MHrSl1hL1Wm8F9rh190oG5D80IlMAJ/6IAM0sd9zTpe2k8r0PNsho6heJOonNN0fzXxLC3Pyz5VVxxmmopU7O75g==";
 enum ProductFeature{SOFTWARE_VALID=1,
@@ -160,17 +160,17 @@ enum ProductFeature{SOFTWARE_VALID=1,
 // 1 for encryption, 0 for decryption
 int do_crypt(const char *in_file, const char *out_file, int do_encrypt) {
 
-  //dog_handle_t hDogHandle;
-  //if(DOG_STATUS_OK == dog_login(DEEP_LEARNING_SERVER_ABNORMAL_FACE_DETECTION, SRVendorCode, &hDogHandle))
-  //{
-    //dog_logout(hDogHandle);
-  //}
-  //else
-  //{
-    //dog_logout(hDogHandle);
-    //printf("Please insert srzn dog for license!\n");
-    //exit(0);
-  //}
+  dog_handle_t hDogHandle;
+  if(DOG_STATUS_OK == dog_login(DEEP_LEARNING_SERVER_ABNORMAL_FACE_DETECTION, SRVendorCode, &hDogHandle))
+  {
+    dog_logout(hDogHandle);
+  }
+  else
+  {
+    dog_logout(hDogHandle);
+    printf("Please insert srzn dog for license!\n");
+    exit(0);
+  }
 
   FILE *fin = fopen(in_file, "rb");
   FILE *fout = fopen(out_file, "wb");
