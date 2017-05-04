@@ -180,7 +180,8 @@ endif
 
 INCLUDE_DIRS += ./super_dog
 LIBRARY_DIRS += ./super_dog
-LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5 crypto dog_linux_x86_64_demo
+LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5 crypto 
+#dog_linux_x86_64_demo
 
 # handle IO dependencies
 USE_LEVELDB ?= 1
